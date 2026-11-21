@@ -39,6 +39,18 @@ class AppState(ctx: Context) {
     var askGfn by mutableStateOf(sp.getBoolean("askGfn", true)); private set
     var introUris by mutableStateOf(Console.values().associateWith { sp.getString("intro_${it.name}", null) }); private set
 
+    // Personalización: tamaño de interfaz / iconos y sonidos de navegación
+    var uiScale by mutableStateOf(sp.getFloat("uiScale", 1f)); private set
+    var iconScale by mutableStateOf(sp.getFloat("iconScale", 1f)); private set
+    var navSoundMode by mutableStateOf(sp.getString("navMode", "SYSTEM")!!); private set // OFF/SYSTEM/TONE/CUSTOM
+    var navSoundUri by mutableStateOf(sp.getString("navUri", null)); private set
+    var sfxVolume by mutableStateOf(sp.getInt("sfxVol", 80)); private set
+    fun changeUiScale(v: Float) { uiScale = v.coerceIn(0.7f, 1.4f); sp.edit().putFloat("uiScale", uiScale).apply() }
+    fun changeIconScale(v: Float) { iconScale = v.coerceIn(0.6f, 1.6f); sp.edit().putFloat("iconScale", iconScale).apply() }
+    fun changeNavMode(v: String) { navSoundMode = v; put("navMode", v) }
+    fun changeNavUri(v: String?) { navSoundUri = v; put("navUri", v) }
+    fun changeSfxVolume(v: Int) { sfxVolume = v.coerceIn(0, 100); sp.edit().putInt("sfxVol", sfxVolume).apply() }
+
     private fun put(k: String, v: String?) = sp.edit().putString(k, v).apply()
 
     fun changeBootMode(v: String) { bootMode = v; put("bootMode", v) }

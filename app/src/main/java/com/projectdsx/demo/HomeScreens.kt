@@ -47,13 +47,16 @@ fun GameCard(
     var focused by remember { mutableStateOf(false) }
     val ctx = LocalContext.current
     val view = androidx.compose.ui.platform.LocalView.current
+    val app = LocalApp.current
+    val w = w * app.iconScale
+    val h = h * app.iconScale
     val scale by animateFloatAsState(if (focused) 1.08f else 1f, label = "scale")
     Box(
         Modifier.size(w, h).scale(scale).clip(shape)
             .border(if (focused) 3.dp else 0.dp, accent, shape)
             .background(Color(0xFF262626))
             .onFocusChanged {
-                if (it.isFocused && !focused) view.playSoundEffect(android.view.SoundEffectConstants.NAVIGATION_RIGHT)
+                if (it.isFocused && !focused) Sfx.nav(view, app)
                 focused = it.isFocused
             }
             .clickable(onClick = onClick)
@@ -110,10 +113,16 @@ fun SettingsBtn(color: Color, onSettings: () -> Unit, modifier: Modifier = Modif
 // ---------- Selector de menú ----------
 
 @Composable
-fun Home(c: Console, games: List<Game>, wallpaper: String?, onOpen: (Game) -> Unit, onSettings: () -> Unit) {
+fun Home(c: Console, games: List<Game>, wallpaper: String?, onOpen: (Game) -> Unit, onProfile: () -> Unit, onSettings: () -> Unit) {
+    Box(Modifier.fillMaxSize()) { HomeInner(c, games, wallpaper, onOpen, onProfile, onSettings)
+        if (c != Console.XONE) StatusWidget(Modifier.align(Alignment.BottomEnd).padding(14.dp), onProfile) }
+}
+
+@Composable
+private fun HomeInner(c: Console, games: List<Game>, wallpaper: String?, onOpen: (Game) -> Unit, onProfile: () -> Unit, onSettings: () -> Unit) {
     when (c) {
         Console.X360 -> X360Menu(games, wallpaper, onOpen, onSettings)
-        Console.XONE -> XOneMenu(games, wallpaper, onOpen, onSettings)
+        Console.XONE -> XOneMenu(games, wallpaper, onOpen, onProfile, onSettings)
         Console.XSERIES -> XSeriesMenu(games, wallpaper, onOpen, onSettings)
         Console.PS4 -> Ps4Menu(games, wallpaper, onOpen, onSettings)
         Console.PS5 -> Ps5Menu(games, wallpaper, onOpen, onSettings)
@@ -145,31 +154,6 @@ fun X360Menu(games: List<Game>, wp: String?, open: (Game) -> Unit, settings: () 
         }
         Spacer(Modifier.weight(1f))
         SettingsBtn(Color(0xFF444444), settings)
-    }
-}
-
-// ---------- Xbox One: mosaico de tiles ----------
-@Composable
-fun XOneMenu(games: List<Game>, wp: String?, open: (Game) -> Unit, settings: () -> Unit) {
-    val green = Color(0xFF107C10)
-    Wallpaper(wp, Brush.linearGradient(listOf(Color(0xFF1B1B1B), Color(0xFF0B3D0B))), 0.35f)
-    Column(Modifier.fillMaxSize().padding(24.dp)) {
-        Row {
-            Text("Inicio", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Light)
-            Spacer(Modifier.weight(1f))
-            Text("XBOX ONE", color = Color(0xFF9BF00B), fontWeight = FontWeight.Bold)
-        }
-        Spacer(Modifier.height(16.dp))
-        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            games.firstOrNull()?.let { GameCard(it, 320.dp, 280.dp, Color.White, RoundedCornerShape(0.dp)) { open(it) } }
-            LazyHorizontalGrid(
-                GridCells.Fixed(2), Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                gridItems(games.drop(1), key = { it.id }) { GameCard(it, 150.dp, 135.dp, Color.White, RoundedCornerShape(0.dp)) { open(it) } }
-            }
-        }
-        SettingsBtn(Color(0xFF9BF00B), settings)
     }
 }
 

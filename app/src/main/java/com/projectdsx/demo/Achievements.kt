@@ -18,6 +18,7 @@ import android.service.notification.StatusBarNotification
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -45,35 +46,50 @@ class AchievementService : NotificationListenerService() {
 object AchievementAlert {
     private val main = Handler(Looper.getMainLooper())
 
-    fun show(ctx: Context, header: String, name: String) = main.post {
-        playSound(ctx)
+    fun show(ctx: Context, header: String, name: String, pkg: String? = null, sound: Boolean = true) = main.post {
+        if (sound) playSound(ctx)
         if (!Settings.canDrawOverlays(ctx)) {
-            Toast.makeText(ctx, "🏆 $header  $name", Toast.LENGTH_LONG).show()
+            Toast.makeText(ctx, "\uD83C\uDFC6 $header  $name", Toast.LENGTH_LONG).show()
             return@post
         }
         val wm = ctx.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val d = ctx.resources.displayMetrics.density
-        val box = LinearLayout(ctx).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding((16 * d).toInt(), (10 * d).toInt(), (20 * d).toInt(), (10 * d).toInt())
+        val row = LinearLayout(ctx).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding((12 * d).toInt(), (10 * d).toInt(), (18 * d).toInt(), (10 * d).toInt())
             background = GradientDrawable().apply {
                 setColor(Color.parseColor("#E61B2838")); cornerRadius = 12 * d
                 setStroke((2 * d).toInt(), Color.parseColor("#1A9FFF"))
             }
+        }
+        val icon = pkg?.let { runCatching { ctx.packageManager.getApplicationIcon(it) }.getOrNull() }
+        if (icon != null) {
+            row.addView(ImageView(ctx).apply { setImageDrawable(icon) }, LinearLayout.LayoutParams((40 * d).toInt(), (40 * d).toInt()).apply { rightMargin = (10 * d).toInt() })
+        }
+        val col = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
             addView(TextView(ctx).apply {
-                text = "🏆  $header"; setTextColor(Color.parseColor("#66C0F4")); textSize = 12f
+                text = "\uD83C\uDFC6  $header"; setTextColor(Color.parseColor("#66C0F4")); textSize = 12f
                 setTypeface(typeface, Typeface.BOLD)
             })
-            addView(TextView(ctx).apply { text = name; setTextColor(Color.WHITE); textSize = 15f; maxWidth = (260 * d).toInt() })
+            addView(TextView(ctx).apply { text = name; setTextColor(Color.WHITE); textSize = 15f; maxWidth = (240 * d).toInt() })
         }
+        row.addView(col)
         val lp = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
             PixelFormat.TRANSLUCENT
         ).apply { gravity = Gravity.END or Gravity.BOTTOM; x = (16 * d).toInt(); y = (24 * d).toInt() }
-        runCatching { wm.addView(box, lp) }
-        main.postDelayed({ runCatching { wm.removeView(box) } }, 5000)
+        // Entra deslizando desde el costado y se cierra con animación
+        row.translationX = 300 * d; row.alpha = 0f
+        runCatching { wm.addView(row, lp) }
+        row.animate().translationX(0f).alpha(1f).setDuration(350).start()
+        main.postDelayed({
+            row.animate().translationX(300 * d).alpha(0f).setDuration(400)
+                .withEndAction { runCatching { wm.removeView(row) } }.start()
+        }, 4500)
     }
 
     private fun playSound(ctx: Context) {

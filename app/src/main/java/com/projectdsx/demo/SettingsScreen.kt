@@ -65,6 +65,13 @@ fun SettingsScreen(
         }
     }
 
+    val navPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            runCatching { ctx.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+            st.changeNavUri(uri.toString()); st.changeNavMode("CUSTOM")
+        }
+    }
+
     if (showLogin) {
         SteamLogin(onId = { st.changeSteamId(it); showLogin = false; onRefresh() }, onClose = { showLogin = false })
         return
@@ -137,6 +144,38 @@ fun SettingsScreen(
                 Text("Actualizar biblioteca", color = Color.White,
                     modifier = Modifier.clickable(onClick = onRefresh).padding(8.dp))
             }
+        }
+
+        item { Section("Tamaño de la interfaz") }
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Interfaz: ${(st.uiScale * 100).toInt()}%", color = Color.White, modifier = Modifier.weight(1f))
+                Text("  −  ", color = Green, fontSize = 22.sp, modifier = Modifier.clickable { st.changeUiScale(st.uiScale - 0.1f) }.padding(8.dp))
+                Text("  +  ", color = Green, fontSize = 22.sp, modifier = Modifier.clickable { st.changeUiScale(st.uiScale + 0.1f) }.padding(8.dp))
+            }
+        }
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Iconos y tiles: ${(st.iconScale * 100).toInt()}%", color = Color.White, modifier = Modifier.weight(1f))
+                Text("  −  ", color = Green, fontSize = 22.sp, modifier = Modifier.clickable { st.changeIconScale(st.iconScale - 0.1f) }.padding(8.dp))
+                Text("  +  ", color = Green, fontSize = 22.sp, modifier = Modifier.clickable { st.changeIconScale(st.iconScale + 0.1f) }.padding(8.dp))
+            }
+        }
+        item { Text("Restablecer tamaños", color = Color(0xFFFF6B6B), modifier = Modifier.clickable { st.changeUiScale(1f); st.changeIconScale(1f) }.padding(vertical = 8.dp)) }
+
+        item { Section("Sonido al moverte por el menú") }
+        item { Row2("Sonido del sistema", st.navSoundMode == "SYSTEM") { st.changeNavMode("SYSTEM") } }
+        item { Row2("Tono corto de la app", st.navSoundMode == "TONE") { st.changeNavMode("TONE") } }
+        item { Row2("Mi propio sonido" + (if (st.navSoundUri == null) " (elige un archivo)" else ""), st.navSoundMode == "CUSTOM") {
+            if (st.navSoundUri == null) navPicker.launch(arrayOf("audio/*")) else st.changeNavMode("CUSTOM") } }
+        item { Row2("Silencio", st.navSoundMode == "OFF") { st.changeNavMode("OFF") } }
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Volumen de efectos: ${st.sfxVolume}%", color = Color.White, modifier = Modifier.weight(1f))
+                Text("  −  ", color = Green, fontSize = 22.sp, modifier = Modifier.clickable { st.changeSfxVolume(st.sfxVolume - 10) }.padding(8.dp))
+                Text("  +  ", color = Green, fontSize = 22.sp, modifier = Modifier.clickable { st.changeSfxVolume(st.sfxVolume + 10) }.padding(8.dp))
+            }
+            Text("Cambiar archivo de sonido", color = Green, modifier = Modifier.clickable { navPicker.launch(arrayOf("audio/*")) }.padding(vertical = 8.dp))
         }
 
         item { Section("Logros de Google Play Juegos") }
