@@ -34,19 +34,19 @@ class AppState(ctx: Context) {
     var steamKey by mutableStateOf(sp.getString("steamKey", "")!!); private set
     var achEnabled by mutableStateOf(sp.getBoolean("achEnabled", true)); private set
     var achSound by mutableStateOf(sp.getString("achSound", null)); private set
-    fun setAchEnabled(v: Boolean) { achEnabled = v; sp.edit().putBoolean("achEnabled", v).apply() }
-    fun setAchSound(v: String?) { achSound = v; put("achSound", v) }
+    fun changeAchEnabled(v: Boolean) { achEnabled = v; sp.edit().putBoolean("achEnabled", v).apply() }
+    fun changeAchSound(v: String?) { achSound = v; put("achSound", v) }
     var askGfn by mutableStateOf(sp.getBoolean("askGfn", true)); private set
     var introUris by mutableStateOf(Console.values().associateWith { sp.getString("intro_${it.name}", null) }); private set
 
     private fun put(k: String, v: String?) = sp.edit().putString(k, v).apply()
 
-    fun setBootMode(v: String) { bootMode = v; put("bootMode", v) }
+    fun changeBootMode(v: String) { bootMode = v; put("bootMode", v) }
     fun setFixed(v: Console) { fixedConsole = v.name; put("fixed", v.name) }
     fun setWallpaper(v: String?) { wallpaperPkg = v; put("wallpaper", v) }
-    fun setSteamId(v: String?) { steamId = v; put("steamId", v) }
-    fun setSteamKey(v: String) { steamKey = v; put("steamKey", v) }
-    fun setAskGfn(v: Boolean) { askGfn = v; sp.edit().putBoolean("askGfn", v).apply() }
+    fun changeSteamId(v: String?) { steamId = v; put("steamId", v) }
+    fun changeSteamKey(v: String) { steamKey = v; put("steamKey", v) }
+    fun changeAskGfn(v: Boolean) { askGfn = v; sp.edit().putBoolean("askGfn", v).apply() }
     fun setIntro(c: Console, uri: String?) {
         introUris = introUris + (c to uri); put("intro_${c.name}", uri)
     }

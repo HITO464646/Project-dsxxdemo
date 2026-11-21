@@ -61,12 +61,12 @@ fun SettingsScreen(
     val soundPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
             runCatching { ctx.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-            st.setAchSound(uri.toString())
+            st.changeAchSound(uri.toString())
         }
     }
 
     if (showLogin) {
-        SteamLogin(onId = { st.setSteamId(it); showLogin = false; onRefresh() }, onClose = { showLogin = false })
+        SteamLogin(onId = { st.changeSteamId(it); showLogin = false; onRefresh() }, onClose = { showLogin = false })
         return
     }
 
@@ -79,14 +79,14 @@ fun SettingsScreen(
         }
 
         item { Section("Arranque del menú") }
-        item { Row2("Una consola distinta cada vez que abro la app", st.bootMode == "ROTATE") { st.setBootMode("ROTATE") } }
-        item { Row2("Al azar", st.bootMode == "RANDOM") { st.setBootMode("RANDOM") } }
-        item { Row2("Siempre la misma:", st.bootMode == "FIXED") { st.setBootMode("FIXED") } }
+        item { Row2("Una consola distinta cada vez que abro la app", st.bootMode == "ROTATE") { st.changeBootMode("ROTATE") } }
+        item { Row2("Al azar", st.bootMode == "RANDOM") { st.changeBootMode("RANDOM") } }
+        item { Row2("Siempre la misma:", st.bootMode == "FIXED") { st.changeBootMode("FIXED") } }
         items(Console.values().toList()) { c ->
             Text(
                 "      " + c.label, fontSize = 15.sp,
                 color = if (st.fixedConsole == c.name) Green else Color(0xFF8A8A8A),
-                modifier = Modifier.clickable { st.setFixed(c); st.setBootMode("FIXED") }.padding(vertical = 5.dp)
+                modifier = Modifier.clickable { st.setFixed(c); st.changeBootMode("FIXED") }.padding(vertical = 5.dp)
             )
         }
 
@@ -122,7 +122,7 @@ fun SettingsScreen(
             Text("Tu Steam Web API Key (steamcommunity.com/dev/apikey) — tu perfil y lista de juegos deben ser públicos:",
                 color = Color(0xFFB0B0B0), fontSize = 13.sp)
             BasicTextField(
-                st.steamKey, { st.setSteamKey(it.trim()) },
+                st.steamKey, { st.changeSteamKey(it.trim()) },
                 textStyle = androidx.compose.ui.text.TextStyle(color = Color.White, fontSize = 15.sp),
                 cursorBrush = SolidColor(Green),
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).background(Color(0xFF1E2024)).padding(12.dp)
@@ -133,7 +133,7 @@ fun SettingsScreen(
                 Text(if (st.steamId == null) "Vincular cuenta de Steam" else "Volver a vincular", color = Green,
                     modifier = Modifier.clickable { showLogin = true }.padding(8.dp))
                 if (st.steamId != null) Text("Desvincular", color = Color(0xFFFF6B6B),
-                    modifier = Modifier.clickable { st.setSteamId(null); onRefresh() }.padding(8.dp))
+                    modifier = Modifier.clickable { st.changeSteamId(null); onRefresh() }.padding(8.dp))
                 Text("Actualizar biblioteca", color = Color.White,
                     modifier = Modifier.clickable(onClick = onRefresh).padding(8.dp))
             }
@@ -143,7 +143,7 @@ fun SettingsScreen(
         item {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
                 Text("Avisar cuando complete un logro", color = Color.White, modifier = Modifier.weight(1f))
-                Switch(st.achEnabled, { st.setAchEnabled(it) })
+                Switch(st.achEnabled, { st.changeAchEnabled(it) })
             }
         }
         item {
@@ -174,7 +174,7 @@ fun SettingsScreen(
                 Text(if (st.achSound == null) "Elegir sonido (ahora: por defecto)" else "Cambiar sonido", color = Green,
                     modifier = Modifier.clickable { soundPicker.launch(arrayOf("audio/*")) }.padding(8.dp))
                 if (st.achSound != null) Text("Quitar sonido", color = Color(0xFFFF6B6B),
-                    modifier = Modifier.clickable { st.setAchSound(null) }.padding(8.dp))
+                    modifier = Modifier.clickable { st.changeAchSound(null) }.padding(8.dp))
                 Text("Probar", color = Color.White,
                     modifier = Modifier.clickable { AchievementAlert.show(ctx, "Logro desbloqueado", "Prueba de logro — Project DSX") }.padding(8.dp))
             }
@@ -191,7 +191,7 @@ fun SettingsScreen(
         item {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.dp)) {
                 Text("Preguntar si quiero jugar en GeForce NOW", color = Color.White, modifier = Modifier.weight(1f))
-                Switch(st.askGfn, { st.setAskGfn(it) })
+                Switch(st.askGfn, { st.changeAskGfn(it) })
             }
         }
         item { Spacer(Modifier.height(40.dp)) }
